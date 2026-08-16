@@ -1,0 +1,1654 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Obsidian Web Reader</title>
+  <meta name="theme-color" content="#07090e">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="ObsidianReader">
+
+  <!-- KaTeX for LaTeX rendering -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+
+  <!-- Highlight.js for Syntax Highlighting -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css" id="hljs-theme">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+
+  <!-- Marked for Markdown Parsing -->
+  <script src="https://cdn.jsdelivr.net/npm/marked@12.0.1/marked.min.js"></script>
+
+  <!-- DOMPurify for XSS Sanitization -->
+  <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.9/dist/purify.min.js"></script>
+
+  <style>
+    /* ==========================================================================
+       BLUE TOPAZ THEMES & COLOR PALETTES
+       ========================================================================== */
+    :root {
+      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      --font-mono: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
+      --font-serif: 'Merriweather', Georgia, serif;
+      --reader-font: var(--font-sans);
+      --font-size-base: 16px;
+      --line-height: 1.75;
+      --max-reader-width: 860px;
+    }
+
+    /* 1. NEW: BLUE TOPAZ HYPER-VIVID (ULTRA HIGH CONTRAST) */
+    [data-theme="bt-hyper-vivid"] {
+      --bg-main: #06080d;
+      --bg-sidebar: #0a0d14;
+      --bg-ribbon: #030407;
+      --bg-card: rgba(18, 24, 38, 0.85);
+      --bg-hover: #1c2436;
+      --text-primary: #ffffff;
+      --text-muted: #94a3b8;
+      --text-faint: #475569;
+      --accent: #00f0ff;
+      --accent-gradient: linear-gradient(135deg, #00f0ff, #d946ef);
+      --border: #1e293b;
+      --code-bg: #090c12;
+      --highlight: rgba(0, 240, 255, 0.35);
+      
+      /* Neon Rainbow Headings */
+      --h1-color: #00f0ff;
+      --h2-color: #00ff88;
+      --h3-color: #d946ef;
+      --h4-color: #ffb703;
+      --h5-color: #ff3366;
+      --h6-color: #70d6ff;
+    }
+
+    /* 2. Blue Topaz Classic Sapphire */
+    [data-theme="bt-sapphire"] {
+      --bg-main: #141820;
+      --bg-sidebar: #0f131a;
+      --bg-ribbon: #0a0d12;
+      --bg-card: rgba(26, 32, 44, 0.7);
+      --bg-hover: #222938;
+      --text-primary: #e2e8f0;
+      --text-muted: #94a3b8;
+      --text-faint: #475569;
+      --accent: #38bdf8;
+      --accent-gradient: linear-gradient(135deg, #38bdf8, #818cf8);
+      --border: #1e293b;
+      --code-bg: #0d1117;
+      --highlight: rgba(56, 189, 248, 0.25);
+      
+      --h1-color: #38bdf8;
+      --h2-color: #34d399;
+      --h3-color: #a78bfa;
+      --h4-color: #fbbf24;
+      --h5-color: #f472b6;
+      --h6-color: #94a3b8;
+    }
+
+    /* 3. Blue Topaz Emerald Forest */
+    [data-theme="bt-emerald"] {
+      --bg-main: #061a14;
+      --bg-sidebar: #04120e;
+      --bg-ribbon: #020a08;
+      --bg-card: rgba(12, 38, 30, 0.75);
+      --bg-hover: #134235;
+      --text-primary: #ecfdf5;
+      --text-muted: #6ee7b7;
+      --text-faint: #065f46;
+      --accent: #10b981;
+      --accent-gradient: linear-gradient(135deg, #10b981, #06b6d4);
+      --border: #0f3e30;
+      --code-bg: #03140f;
+      --highlight: rgba(16, 185, 129, 0.3);
+
+      --h1-color: #10b981;
+      --h2-color: #2dd4bf;
+      --h3-color: #a3e635;
+      --h4-color: #38bdf8;
+      --h5-color: #facc15;
+      --h6-color: #6ee7b7;
+    }
+
+    /* 4. Blue Topaz Sakura Blossom */
+    [data-theme="bt-sakura"] {
+      --bg-main: #1f151b;
+      --bg-sidebar: #170f14;
+      --bg-ribbon: #100a0e;
+      --bg-card: rgba(45, 27, 38, 0.75);
+      --bg-hover: #3d2232;
+      --text-primary: #fdf2f8;
+      --text-muted: #f472b6;
+      --text-faint: #831843;
+      --accent: #ec4899;
+      --accent-gradient: linear-gradient(135deg, #ec4899, #f43f5e);
+      --border: #3d2133;
+      --code-bg: #140d12;
+      --highlight: rgba(236, 72, 153, 0.3);
+
+      --h1-color: #f472b6;
+      --h2-color: #fb7185;
+      --h3-color: #c084fc;
+      --h4-color: #f97316;
+      --h5-color: #fda4af;
+      --h6-color: #f472b6;
+    }
+
+    /* 5. Blue Topaz Sunset Amber */
+    [data-theme="bt-sunset"] {
+      --bg-main: #1c1512;
+      --bg-sidebar: #140e0c;
+      --bg-ribbon: #0d0908;
+      --bg-card: rgba(43, 29, 23, 0.75);
+      --bg-hover: #3d2920;
+      --text-primary: #fff7ed;
+      --text-muted: #fb923c;
+      --text-faint: #7c2d12;
+      --accent: #f97316;
+      --accent-gradient: linear-gradient(135deg, #f97316, #eab308);
+      --border: #43281c;
+      --code-bg: #120c0a;
+      --highlight: rgba(249, 115, 22, 0.3);
+
+      --h1-color: #f97316;
+      --h2-color: #fbbf24;
+      --h3-color: #f87171;
+      --h4-color: #a855f7;
+      --h5-color: #fdba74;
+      --h6-color: #ea580c;
+    }
+
+    /* 6. Blue Topaz Crystal Light */
+    [data-theme="bt-crystal"] {
+      --bg-main: #f8fafc;
+      --bg-sidebar: #f1f5f9;
+      --bg-ribbon: #e2e8f0;
+      --bg-card: rgba(255, 255, 255, 0.85);
+      --bg-hover: #e2e8f0;
+      --text-primary: #0f172a;
+      --text-muted: #64748b;
+      --text-faint: #94a3b8;
+      --accent: #0284c7;
+      --accent-gradient: linear-gradient(135deg, #0284c7, #6366f1);
+      --border: #cbd5e1;
+      --code-bg: #f1f5f9;
+      --highlight: rgba(254, 240, 138, 0.7);
+
+      --h1-color: #0284c7;
+      --h2-color: #059669;
+      --h3-color: #7c3aed;
+      --h4-color: #d97706;
+      --h5-color: #db2777;
+      --h6-color: #475569;
+    }
+
+    /* 7. Blue Topaz Warm Parchment Light */
+    [data-theme="bt-parchment"] {
+      --bg-main: #fcf8f2;
+      --bg-sidebar: #f4ece1;
+      --bg-ribbon: #e8ded0;
+      --bg-card: rgba(255, 255, 255, 0.85);
+      --bg-hover: #e8ded0;
+      --text-primary: #2d231b;
+      --text-muted: #786452;
+      --text-faint: #b09e8c;
+      --accent: #b45309;
+      --accent-gradient: linear-gradient(135deg, #b45309, #d97706);
+      --border: #dccdbb;
+      --code-bg: #efe6d9;
+      --highlight: rgba(245, 158, 11, 0.3);
+
+      --h1-color: #92400e;
+      --h2-color: #1e40af;
+      --h3-color: #065f46;
+      --h4-color: #9f1239;
+      --h5-color: #5b21b6;
+      --h6-color: #786452;
+    }
+
+    /* ==========================================================================
+       APP LAYOUT & STRICT FLEX CONSTRAINTS
+       ========================================================================== */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      height: 100%;
+      width: 100%;
+      overflow: hidden;
+      font-family: var(--reader-font);
+      background-color: var(--bg-main);
+      color: var(--text-primary);
+    }
+
+    .app-root {
+      display: flex;
+      height: 100vh;
+      width: 100vw;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* Progress Bar */
+    #progress-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 3.5px;
+      background: var(--accent-gradient);
+      width: 0%;
+      z-index: 1000;
+      transition: width 0.1s ease-out;
+      box-shadow: 0 0 10px var(--accent);
+    }
+
+    /* Ribbon */
+    .ribbon {
+      width: 50px;
+      background: var(--bg-ribbon);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 10px 0;
+      gap: 12px;
+      z-index: 60;
+      flex-shrink: 0;
+    }
+
+    .ribbon-btn {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      width: 40px;
+      height: 40px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s ease;
+      position: relative;
+    }
+
+    .ribbon-btn:hover, .ribbon-btn:active {
+      background: var(--bg-hover);
+      color: var(--text-primary);
+      transform: scale(1.05);
+    }
+
+    .ribbon-btn-paste {
+      background: var(--accent-gradient);
+      color: #ffffff !important;
+      box-shadow: 0 2px 10px rgba(0, 240, 255, 0.3);
+    }
+
+    .ribbon-btn-install {
+      background: rgba(16, 185, 129, 0.15);
+      color: #10b981;
+      border: 1px solid #10b981;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: 270px;
+      background: var(--bg-sidebar);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      transition: width 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      z-index: 50;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+
+    .sidebar.collapsed {
+      width: 0px;
+      border-right: none;
+    }
+
+    .sidebar-header {
+      padding: 12px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+
+    .sidebar-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 8px;
+    }
+
+    .doc-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13.5px;
+      color: var(--text-primary);
+      margin-bottom: 3px;
+      transition: all 0.15s ease;
+    }
+
+    .doc-item:hover {
+      background: var(--bg-hover);
+    }
+
+    .doc-item.active {
+      background: var(--bg-card);
+      color: var(--accent);
+      font-weight: 600;
+      border-left: 3px solid var(--accent);
+    }
+
+    .badge {
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-weight: bold;
+      text-transform: uppercase;
+    }
+    .badge-permanent { background: rgba(56, 189, 248, 0.2); color: #38bdf8; }
+    .badge-temporary { background: rgba(251, 191, 36, 0.2); color: #fbbf24; }
+    .badge-flush     { background: rgba(239, 68, 68, 0.25); color: #ef4444; }
+
+    /* Workspace */
+    .workspace {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      min-width: 0;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* Pinned Top Navigation Bar */
+    .topbar {
+      height: 52px;
+      flex-shrink: 0;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      background: var(--bg-main);
+      backdrop-filter: blur(12px);
+      z-index: 40;
+      gap: 8px;
+    }
+
+    .topbar-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+      flex: 1;
+    }
+
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+
+    .doc-title-input {
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--text-primary);
+      font-size: 15px;
+      font-weight: 600;
+      outline: none;
+      padding: 4px 8px;
+      border-radius: 6px;
+      max-width: 260px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      transition: all 0.15s ease;
+    }
+    .doc-title-input:focus {
+      background: var(--bg-card);
+      border-color: var(--border);
+    }
+
+    /* Buttons */
+    .btn {
+      background: var(--bg-card);
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+      padding: 6px 10px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+      user-select: none;
+    }
+    .btn:hover {
+      background: var(--bg-hover);
+      border-color: var(--accent);
+    }
+
+    .btn-paste {
+      background: var(--accent-gradient);
+      color: #ffffff;
+      border: none;
+      font-weight: 700;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    }
+    .btn-paste:hover {
+      opacity: 0.92;
+      transform: translateY(-1px);
+    }
+
+    .btn-zen {
+      background: rgba(168, 85, 247, 0.15);
+      color: #c084fc;
+      border: 1px solid #c084fc;
+    }
+
+    .btn-danger { background: #dc2626; color: white; border: none; }
+
+    /* View Splitter Container */
+    .view-container {
+      flex: 1;
+      display: flex;
+      min-height: 0;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* Editor Pane */
+    .editor-pane {
+      flex: 1;
+      height: 100%;
+      border: none;
+      padding: 24px 28px;
+      background: var(--bg-main);
+      color: var(--text-primary);
+      font-family: var(--font-mono);
+      font-size: 14px;
+      line-height: 1.65;
+      resize: none;
+      outline: none;
+      display: none;
+      overflow-y: auto;
+    }
+
+    /* Reader Pane */
+    .reader-pane {
+      flex: 1;
+      height: 100%;
+      min-height: 0;
+      overflow-y: auto;
+      padding: 36px 20px 100px 20px;
+      display: flex;
+      justify-content: center;
+      scroll-behavior: smooth;
+    }
+
+    .markdown-rendered {
+      width: 100%;
+      max-width: var(--max-reader-width);
+      font-size: var(--font-size-base);
+      line-height: var(--line-height);
+      color: var(--text-primary);
+      word-break: break-word;
+    }
+
+    /* ==========================================================================
+       FULLSCREEN IMMERSIVE / ZEN MODE
+       ========================================================================== */
+    body.zen-mode .ribbon,
+    body.zen-mode .sidebar,
+    body.zen-mode .topbar,
+    body.zen-mode .statusbar,
+    body.zen-mode .outline-pane {
+      display: none !important;
+    }
+
+    body.zen-mode .workspace {
+      height: 100vh !important;
+      width: 100vw !important;
+    }
+
+    body.zen-mode .reader-pane {
+      padding: 60px 24px 120px 24px;
+    }
+
+    .zen-exit-btn {
+      display: none;
+      position: fixed;
+      top: 18px;
+      right: 24px;
+      background: var(--bg-card);
+      color: var(--text-primary);
+      border: 1px solid var(--accent);
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 12.5px;
+      font-weight: 600;
+      cursor: pointer;
+      z-index: 9999;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+      backdrop-filter: blur(8px);
+      opacity: 0.8;
+      transition: all 0.2s ease;
+    }
+    .zen-exit-btn:hover {
+      opacity: 1;
+      transform: scale(1.05);
+    }
+    body.zen-mode .zen-exit-btn {
+      display: block;
+    }
+
+    /* ==========================================================================
+       TYPOGRAPHY, HIGHLIGHTS, CALLOUTS, CODE BLOCKS
+       ========================================================================== */
+    .markdown-rendered h1, 
+    .markdown-rendered h2, 
+    .markdown-rendered h3, 
+    .markdown-rendered h4, 
+    .markdown-rendered h5, 
+    .markdown-rendered h6 {
+      margin-top: 1.6em;
+      margin-bottom: 0.5em;
+      font-weight: 700;
+      line-height: 1.3;
+    }
+
+    .markdown-rendered h1 {
+      font-size: 2.3em;
+      color: var(--h1-color);
+      border-bottom: 2px solid var(--border);
+      padding-bottom: 0.3em;
+    }
+    .markdown-rendered h2 {
+      font-size: 1.7em;
+      color: var(--h2-color);
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 0.2em;
+    }
+    .markdown-rendered h3 { font-size: 1.38em; color: var(--h3-color); }
+    .markdown-rendered h4 { font-size: 1.18em; color: var(--h4-color); }
+    .markdown-rendered h5 { font-size: 1.05em; color: var(--h5-color); }
+    .markdown-rendered h6 { font-size: 0.95em; color: var(--h6-color); text-transform: uppercase; }
+
+    .markdown-rendered p { margin-bottom: 1.2em; }
+    .markdown-rendered strong { font-weight: 700; }
+    .markdown-rendered em { font-style: italic; }
+
+    .markdown-rendered mark {
+      background: var(--highlight);
+      color: inherit;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-weight: 600;
+    }
+
+    .obsidian-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      background: var(--bg-card);
+      color: var(--accent);
+      border: 1px solid var(--border);
+      padding: 1px 8px;
+      border-radius: 12px;
+      font-size: 0.85em;
+      font-weight: 600;
+      text-decoration: none;
+      margin: 0 2px;
+    }
+
+    .wikilink {
+      color: var(--accent);
+      background: rgba(0, 240, 255, 0.08);
+      border-bottom: 1.5px solid var(--accent);
+      padding: 1px 6px;
+      border-radius: 4px;
+      font-weight: 500;
+      cursor: pointer;
+      text-decoration: none;
+    }
+
+    /* Frontmatter Box */
+    .frontmatter-box {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 18px;
+      margin-bottom: 28px;
+      font-family: var(--font-mono);
+      font-size: 12.5px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .frontmatter-tag {
+      background: var(--bg-hover);
+      padding: 3px 8px;
+      border-radius: 6px;
+      color: var(--text-muted);
+    }
+
+    /* Code Blocks */
+    .code-container {
+      position: relative;
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      margin: 1.5em 0;
+      overflow: hidden;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+    .code-header {
+      background: var(--bg-card);
+      padding: 6px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      color: var(--text-muted);
+    }
+    .code-dots { display: flex; gap: 5px; }
+    .code-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+    .code-dot-red { background: #ef4444; }
+    .code-dot-yellow { background: #f59e0b; }
+    .code-dot-green { background: #10b981; }
+
+    .markdown-rendered pre { padding: 16px; overflow-x: auto; margin: 0; font-family: var(--font-mono); font-size: 13.5px; }
+    .markdown-rendered code { font-family: var(--font-mono); background: var(--code-bg); padding: 2px 6px; border-radius: 5px; font-size: 0.88em; }
+    .markdown-rendered pre code { background: transparent; padding: 0; }
+
+    .copy-btn {
+      background: var(--bg-hover);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--text-muted);
+      font-size: 11px;
+      padding: 2px 8px;
+      cursor: pointer;
+    }
+
+    /* Callouts */
+    .callout {
+      border-left: 4.5px solid var(--callout-border);
+      background: var(--bg-card);
+      border-radius: 10px;
+      padding: 14px 18px;
+      margin: 1.4em 0;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    }
+    .callout-title { font-weight: 700; display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+    .callout-note    { --callout-border: #00f0ff; }
+    .callout-tip     { --callout-border: #00ff88; }
+    .callout-warning { --callout-border: #ffb703; }
+    .callout-danger  { --callout-border: #ff3366; }
+    .callout-info    { --callout-border: #70d6ff; }
+    .callout-example { --callout-border: #d946ef; }
+    .callout-quote   { --callout-border: #94a3b8; }
+
+    /* Tables */
+    .markdown-rendered table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1.6em 0;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+    .markdown-rendered th, .markdown-rendered td { border: 1px solid var(--border); padding: 10px 14px; text-align: left; }
+    .markdown-rendered th { background: var(--bg-card); font-weight: 600; }
+
+    /* Outline Pane */
+    .outline-pane {
+      width: 240px;
+      border-left: 1px solid var(--border);
+      background: var(--bg-sidebar);
+      padding: 16px;
+      overflow-y: auto;
+      display: none;
+      flex-shrink: 0;
+    }
+    .outline-title { font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 12px; }
+    .outline-item { display: block; color: var(--text-muted); text-decoration: none; font-size: 13px; padding: 4px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .outline-item:hover { color: var(--accent); }
+    .outline-item.depth-2 { padding-left: 12px; }
+    .outline-item.depth-3 { padding-left: 24px; }
+
+    /* Status Bar */
+    .statusbar {
+      height: 28px;
+      background: var(--bg-sidebar);
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      font-size: 11.5px;
+      color: var(--text-muted);
+      flex-shrink: 0;
+    }
+
+    /* Toast Notification */
+    .toast {
+      position: fixed;
+      bottom: 40px;
+      right: 24px;
+      background: var(--bg-card);
+      color: var(--text-primary);
+      border: 1px solid var(--accent);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+      padding: 10px 18px;
+      border-radius: 8px;
+      font-size: 13.5px;
+      font-weight: 500;
+      z-index: 10000;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: all 0.25s ease;
+      pointer-events: none;
+    }
+    .toast.show { opacity: 1; transform: translateY(0); }
+
+    /* Modals */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(5px);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 2000;
+    }
+    .modal {
+      background: var(--bg-sidebar);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      width: 92%;
+      max-width: 480px;
+      padding: 24px;
+      box-shadow: 0 20px 30px rgba(0, 0, 0, 0.5);
+    }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
+    .modal-title { font-size: 17px; font-weight: 700; }
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display: block; font-size: 13px; color: var(--text-muted); margin-bottom: 6px; }
+    .form-control { width: 100%; padding: 8px 12px; background: var(--bg-main); border: 1px solid var(--border); border-radius: 6px; color: var(--text-primary); font-size: 14px; outline: none; }
+
+    @media (max-width: 768px) {
+      .sidebar { position: absolute; height: 100%; left: 50px; }
+      .sidebar.collapsed { width: 0; }
+      .outline-pane { display: none !important; }
+      .doc-title-input { max-width: 140px; }
+    }
+  </style>
+</head>
+<body data-theme="bt-hyper-vivid">
+
+  <!-- Floating Zen Mode Exit Button -->
+  <button class="zen-exit-btn" id="btn-exit-zen">✕ Exit Fullscreen (Esc)</button>
+
+  <div class="app-root">
+    <!-- Progress Bar -->
+    <div id="progress-bar"></div>
+
+    <!-- Left Icon Ribbon -->
+    <div class="ribbon">
+      <button class="ribbon-btn ribbon-btn-paste" id="ribbon-btn-paste" title="Paste & Clear from Clipboard">
+        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+      </button>
+      <button class="ribbon-btn" id="btn-toggle-sidebar" title="Toggle Documents">
+        <svg width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
+      </button>
+      <button class="ribbon-btn" id="btn-toggle-zen-ribbon" title="Fullscreen Immersive Mode">
+        <svg width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 00-2 2v3m18 0V5a2 2 0 00-2-2h-3m0 18h3a2 2 0 002-2v-3M3 16v3a2 2 0 002 2h3"/></svg>
+      </button>
+      <button class="ribbon-btn" id="btn-new-doc" title="New Blank Note">
+        <svg width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4"/></svg>
+      </button>
+      <button class="ribbon-btn" id="btn-import" title="Import File">
+        <svg width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+      </button>
+      <button class="ribbon-btn" id="btn-toggle-toc" title="Table of Contents">
+        <svg width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 6h16M4 12h10M4 18h14"/></svg>
+      </button>
+      <div style="flex: 1;"></div>
+      <!-- PWA Install Button -->
+      <button class="ribbon-btn ribbon-btn-install" id="btn-pwa-install" title="Install as Web App (PWA)">
+        <svg width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+      </button>
+      <button class="ribbon-btn" id="btn-theme-modal" title="Blue Topaz Themes">
+        <svg width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+      </button>
+      <button class="ribbon-btn" id="btn-settings" title="Settings & Typography">
+        <svg width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+      </button>
+    </div>
+
+    <!-- Left File Explorer -->
+    <div class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <span>Vault Notes</span>
+        <span id="doc-counter">0 items</span>
+      </div>
+      <div class="sidebar-content" id="doc-list"></div>
+    </div>
+
+    <!-- Main Workspace -->
+    <div class="workspace">
+      <!-- Pinned Top Navigation Menu -->
+      <div class="topbar">
+        <div class="topbar-left">
+          <input type="text" class="doc-title-input" id="doc-title" value="Hyper-Contrast Blue Topaz">
+          <span class="badge badge-permanent" id="doc-mode-badge">PERMANENT</span>
+        </div>
+        <div class="topbar-right">
+          <!-- One-Click Paste Button -->
+          <button class="btn btn-paste" id="btn-paste-clear" title="Clear existing and paste clipboard">
+            <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+            <span>Paste & Read</span>
+          </button>
+          <!-- Fullscreen Zen Mode Button -->
+          <button class="btn btn-zen" id="btn-toggle-zen" title="Toggle Fullscreen Immersive View">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 00-2 2v3m18 0V5a2 2 0 00-2-2h-3m0 18h3a2 2 0 002-2v-3M3 16v3a2 2 0 002 2h3"/></svg>
+            <span>Zen Mode</span>
+          </button>
+          <select id="view-mode" class="btn">
+            <option value="reader">📖 Read View</option>
+            <option value="editor">✏️ Source Mode</option>
+            <option value="split">📑 Live Split</option>
+          </select>
+          <select id="storage-mode-selector" class="btn">
+            <option value="permanent">💾 Permanent</option>
+            <option value="temporary">⏳ Temp (24h)</option>
+            <option value="flush">🔥 Flush Mode</option>
+          </select>
+          <button class="btn btn-danger" id="btn-flush-now" style="display: none;">Flush Now</button>
+        </div>
+      </div>
+
+      <!-- Main Body Splitter -->
+      <div class="view-container">
+        <textarea class="editor-pane" id="editor" placeholder="Write or paste Markdown / HTML with LaTeX ($...$) here..."></textarea>
+        
+        <div class="reader-pane" id="reader-container">
+          <div class="markdown-rendered" id="reader"></div>
+        </div>
+
+        <div class="outline-pane" id="outline">
+          <div class="outline-title">Outline</div>
+          <div id="outline-list"></div>
+        </div>
+      </div>
+
+      <!-- Status Bar -->
+      <div class="statusbar">
+        <div>
+          <span id="stat-words">0 words</span> • 
+          <span id="stat-chars">0 chars</span> • 
+          <span id="stat-read-time">0 min read</span>
+        </div>
+        <div>
+          <span id="storage-status-text">Blue Topaz Hyper-Vivid Ready</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Element -->
+  <div class="toast" id="toast-msg">
+    <span>📋 Content loaded!</span>
+  </div>
+
+  <!-- Theme Selector Modal -->
+  <div class="modal-overlay" id="theme-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">Blue Topaz Theme Gallery</div>
+        <button class="btn" onclick="closeModal('theme-modal')">✕</button>
+      </div>
+      <div class="form-group">
+        <label>Select Palette:</label>
+        <select id="theme-picker" class="form-control">
+          <optgroup label="⚡ High Contrast & Dark">
+            <option value="bt-hyper-vivid">Blue Topaz Hyper-Vivid (Ultra Contrast)</option>
+            <option value="bt-sapphire">Blue Topaz Classic Sapphire</option>
+            <option value="bt-emerald">Blue Topaz Emerald Forest</option>
+            <option value="bt-sakura">Blue Topaz Sakura Blossom</option>
+            <option value="bt-sunset">Blue Topaz Sunset Amber</option>
+          </optgroup>
+          <optgroup label="☀️ Clean Light">
+            <option value="bt-crystal">Blue Topaz Crystal Light</option>
+            <option value="bt-parchment">Blue Topaz Warm Parchment</option>
+          </optgroup>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- Typography & Settings Modal -->
+  <div class="modal-overlay" id="settings-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">Settings & Typography</div>
+        <button class="btn" onclick="closeModal('settings-modal')">✕</button>
+      </div>
+      <div class="form-group">
+        <label>Typography Font Family</label>
+        <select id="font-picker" class="form-control">
+          <option value="var(--font-sans)">Sans-Serif (Inter / Modern)</option>
+          <option value="var(--font-serif)">Literary Serif (Merriweather)</option>
+          <option value="var(--font-mono)">Code Monospace (JetBrains Mono)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Font Size (<span id="font-size-label">16px</span>)</label>
+        <input type="range" id="font-size-slider" min="13" max="24" value="16" style="width: 100%;">
+      </div>
+      <div class="form-group">
+        <label>Reading Width (<span id="width-label">860px</span>)</label>
+        <input type="range" id="width-slider" min="600" max="1200" step="20" value="860" style="width: 100%;">
+      </div>
+    </div>
+  </div>
+
+  <!-- File Input -->
+  <input type="file" id="file-importer" accept=".md,.markdown,.html,.txt" style="display: none;">
+
+  <!-- ==========================================================================
+       JAVASCRIPT APPLICATION CORE
+       ========================================================================== */ -->
+  <script>
+    const SAMPLE_DOC = `---
+title: Hyper-Contrast Blue Topaz Obsidian Reader
+tags: [blue-topaz, neon, pwa, latex]
+theme: hyper-vivid
+---
+
+# Hyper-Contrast Blue Topaz Obsidian Reader
+
+A bold, high-contrast PWA reader with **Rainbow Headings**, **LaTeX mathematics**, and **Zen Mode**.
+
+## Rainbow Heading Hierarchy
+### Level 3 Heading: Fuchsia Neon
+#### Level 4 Heading: Radiant Amber Gold
+##### Level 5 Heading: Hot Coral
+###### Level 6 Heading: Ice Sky Tag
+
+---
+
+## 1. Advanced LaTeX Mathematics
+Inline equations such as $\\mathbf{F} = m\\mathbf{a}$ and $\\oint_{\\partial \\Sigma} \\mathbf{B} \\cdot d\\mathbf{l} = \\mu_0 I_{\\text{enc}}$, or block equations:
+
+$$\\int_{-\\infty}^{+\\infty} e^{-x^2} dx = \\sqrt{\\pi} \\quad \\Longleftrightarrow \\quad \\frac{\\partial \\rho}{\\partial t} + \\nabla \\cdot \\mathbf{J} = 0$$
+
+## 2. High-Contrast Obsidian Callouts
+> [!NOTE]
+> Blue Topaz style note card with glowing electric cyan accent.
+
+> [!TIP]
+> Click **Zen Mode** (or press Esc) to experience pure distraction-free full-screen reading!
+
+> [!WARNING]
+> Flush Mode notes never touch IndexedDB and are erased upon closing.
+
+> [!DANGER]
+> Burning a flush document permanently destroys it from memory.
+
+## 3. Obsidian Tags & Highlights
+Use tags like #quantum-physics, #blue-topaz/vivid, and #pwa.
+
+Highlight key text with ==double equal signs== for luminous reading contrast.
+
+\`\`\`python
+# High-contrast codeblock with Mac-style header dots
+def calculate_reading_time(words: int) -> int:
+    return max(1, round(words / 200))
+\`\`\`
+`;
+
+    /* ---------------------------------------------------------
+       INDEXEDDB DATABASE LAYER
+       --------------------------------------------------------- */
+    const DB_NAME = 'BlueTopazReaderDB';
+    const DB_VERSION = 1;
+    let db;
+
+    async function initDB() {
+      return new Promise((resolve, reject) => {
+        const req = indexedDB.open(DB_NAME, DB_VERSION);
+        req.onupgradeneeded = (e) => {
+          const dbInstance = e.target.result;
+          if (!dbInstance.objectStoreNames.contains('docs')) {
+            dbInstance.createObjectStore('docs', { keyPath: 'id' });
+          }
+        };
+        req.onsuccess = () => { db = req.result; resolve(db); };
+        req.onerror = () => reject(req.error);
+      });
+    }
+
+    async function dbSaveDoc(doc) {
+      if (doc.storageMode === 'flush') return;
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction('docs', 'readwrite');
+        tx.objectStore('docs').put(doc);
+        tx.oncomplete = () => resolve();
+        tx.onerror = () => reject(tx.error);
+      });
+    }
+
+    async function dbGetAllDocs() {
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction('docs', 'readonly');
+        const req = tx.objectStore('docs').getAll();
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error);
+      });
+    }
+
+    async function dbDeleteDoc(id) {
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction('docs', 'readwrite');
+        tx.objectStore('docs').delete(id);
+        tx.oncomplete = () => resolve();
+        tx.onerror = () => reject(tx.error);
+      });
+    }
+
+    /* ---------------------------------------------------------
+       STATE & PARSER PIPELINE
+       --------------------------------------------------------- */
+    let currentDoc = {
+      id: 'doc_welcome',
+      title: 'Hyper-Contrast Blue Topaz',
+      content: SAMPLE_DOC,
+      storageMode: 'permanent',
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+      expiresAt: null
+    };
+
+    function renderMarkdown(mdText) {
+      if (!mdText) return '';
+
+      let text = mdText;
+      let frontmatterHTML = '';
+
+      // YAML Frontmatter parsing
+      const yamlMatch = text.match(/^---\n([\s\S]*?)\n---\n/);
+      if (yamlMatch) {
+        text = text.slice(yamlMatch[0].length);
+        const tags = [];
+        yamlMatch[1].split('\n').forEach(line => {
+          if (line.includes(':')) {
+            const [k, v] = line.split(':');
+            tags.push(`<span class="frontmatter-tag"><b>${k.trim()}:</b> ${v.trim()}</span>`);
+          }
+        });
+        frontmatterHTML = `<div class="frontmatter-box">${tags.join('')}</div>`;
+      }
+
+      // Preserve LaTeX Math
+      const mathBlocks = [];
+      const mathInlines = [];
+
+      text = text.replace(/\$\$([\s\S]*?)\$\$/g, (_, eq) => {
+        mathBlocks.push(eq);
+        return `@@MATH_BLOCK_${mathBlocks.length - 1}@@`;
+      });
+
+      text = text.replace(/\$([^\$\n]+?)\$/g, (_, eq) => {
+        mathInlines.push(eq);
+        return `@@MATH_INLINE_${mathInlines.length - 1}@@`;
+      });
+
+      // Highlights ==text==
+      text = text.replace(/==([^=\n]+?)==/g, '<mark>$1</mark>');
+
+      // Obsidian Tags: #tag-name
+      text = text.replace(/(^|\s)#([a-zA-Z0-9_\-\/]+)(?=\s|$)/g, '$1<span class="obsidian-tag">#$2</span>');
+
+      // Wikilinks [[Target|Alias]]
+      text = text.replace(/\[\[([^\]\|]+)(?:\|([^\]]+))?\]\]/g, (_, target, alias) => {
+        return `<span class="wikilink">${alias || target}</span>`;
+      });
+
+      // Obsidian Callouts: > [!NOTE] Title
+      text = text.replace(/^>\s*\[!([a-zA-Z]+)\][ \t]*(.*)$/gm, (_, type, title) => {
+        const typeLower = type.toLowerCase();
+        const displayTitle = title.trim() || type;
+        return `> <div class="callout callout-${typeLower}"><div class="callout-title">📌 ${displayTitle}</div>`;
+      });
+
+      // Marked HTML conversion
+      let html = marked.parse(text);
+
+      // Rehydrate Block Math
+      html = html.replace(/@@MATH_BLOCK_(\d+)@@/g, (_, idx) => {
+        try {
+          return katex.renderToString(mathBlocks[idx], { displayMode: true, throwOnError: false });
+        } catch (e) {
+          return `<pre class="katex-error">${mathBlocks[idx]}</pre>`;
+        }
+      });
+
+      // Rehydrate Inline Math
+      html = html.replace(/@@MATH_INLINE_(\d+)@@/g, (_, idx) => {
+        try {
+          return katex.renderToString(mathInlines[idx], { displayMode: false, throwOnError: false });
+        } catch (e) {
+          return `<code class="katex-error">${mathInlines[idx]}</code>`;
+        }
+      });
+
+      return frontmatterHTML + DOMPurify.sanitize(html, {
+        ADD_TAGS: ['math', 'semantics', 'mrow', 'mi', 'mo', 'mn', 'annotation', 'mark'],
+        ADD_ATTR: ['display', 'xmlns']
+      });
+    }
+
+    /* ---------------------------------------------------------
+       DOM CONTROLLERS
+       --------------------------------------------------------- */
+    const readerEl = document.getElementById('reader');
+    const editorEl = document.getElementById('editor');
+    const docTitleEl = document.getElementById('doc-title');
+    const docModeBadge = document.getElementById('doc-mode-badge');
+    const storageModeSelector = document.getElementById('storage-mode-selector');
+    const viewModeSelector = document.getElementById('view-mode');
+    const outlinePane = document.getElementById('outline');
+    const outlineList = document.getElementById('outline-list');
+    const progressBar = document.getElementById('progress-bar');
+    const readerContainer = document.getElementById('reader-container');
+    const btnFlushNow = document.getElementById('btn-flush-now');
+    const toastEl = document.getElementById('toast-msg');
+
+    function showToast(msg) {
+      toastEl.querySelector('span').textContent = msg;
+      toastEl.classList.add('show');
+      setTimeout(() => toastEl.classList.remove('show'), 2400);
+    }
+
+    function updateReader() {
+      readerEl.innerHTML = renderMarkdown(currentDoc.content);
+
+      // Wrap codeblocks in Mac-dots header
+      readerEl.querySelectorAll('pre').forEach(pre => {
+        if (pre.parentElement.classList.contains('code-container')) return;
+        
+        const code = pre.querySelector('code');
+        const lang = code ? (code.className.match(/language-(\w+)/) || [, 'code'])[1] : 'code';
+        
+        const container = document.createElement('div');
+        container.className = 'code-container';
+
+        const header = document.createElement('div');
+        header.className = 'code-header';
+        header.innerHTML = `
+          <div class="code-dots">
+            <span class="code-dot code-dot-red"></span>
+            <span class="code-dot code-dot-yellow"></span>
+            <span class="code-dot code-dot-green"></span>
+          </div>
+          <span>${lang}</span>
+          <button class="copy-btn">Copy</button>
+        `;
+
+        header.querySelector('.copy-btn').onclick = () => {
+          navigator.clipboard.writeText(code ? code.textContent : pre.textContent);
+          showToast('Code copied to clipboard!');
+        };
+
+        pre.parentNode.insertBefore(container, pre);
+        container.appendChild(header);
+        container.appendChild(pre);
+
+        if (code) hljs.highlightElement(code);
+      });
+
+      updateStats();
+      generateOutline();
+    }
+
+    function updateStats() {
+      const text = currentDoc.content || '';
+      const words = text.trim() ? text.trim().split(/\s+/).length : 0;
+      const chars = text.length;
+      const readTime = Math.ceil(words / 200);
+
+      document.getElementById('stat-words').textContent = `${words.toLocaleString()} words`;
+      document.getElementById('stat-chars').textContent = `${chars.toLocaleString()} chars`;
+      document.getElementById('stat-read-time').textContent = `${readTime} min read`;
+    }
+
+    function generateOutline() {
+      outlineList.innerHTML = '';
+      const headings = readerEl.querySelectorAll('h1, h2, h3, h4');
+      headings.forEach((h, index) => {
+        const id = 'heading-' + index;
+        h.id = id;
+        const link = document.createElement('a');
+        link.className = `outline-item depth-${h.tagName.substring(1)}`;
+        link.textContent = h.textContent;
+        link.href = `#${id}`;
+        link.onclick = (e) => {
+          e.preventDefault();
+          h.scrollIntoView({ behavior: 'smooth' });
+        };
+        outlineList.appendChild(link);
+      });
+    }
+
+    function updateStorageBadge() {
+      docModeBadge.className = 'badge badge-' + currentDoc.storageMode;
+      docModeBadge.textContent = currentDoc.storageMode.toUpperCase();
+      storageModeSelector.value = currentDoc.storageMode;
+      btnFlushNow.style.display = currentDoc.storageMode === 'flush' ? 'inline-flex' : 'none';
+    }
+
+    async function saveCurrentDocument() {
+      currentDoc.title = docTitleEl.value;
+      currentDoc.content = editorEl.value;
+      currentDoc.updatedAt = Date.now();
+
+      if (currentDoc.storageMode === 'temporary') {
+        currentDoc.expiresAt = Date.now() + 86400000;
+      } else {
+        currentDoc.expiresAt = null;
+      }
+
+      if (currentDoc.storageMode !== 'flush') {
+        await dbSaveDoc(currentDoc);
+      }
+      await refreshDocList();
+    }
+
+    async function refreshDocList() {
+      const storedDocs = await dbGetAllDocs();
+      const listEl = document.getElementById('doc-list');
+      listEl.innerHTML = '';
+
+      if (currentDoc.storageMode === 'flush') {
+        listEl.appendChild(createDocListItem(currentDoc, true));
+      }
+
+      storedDocs.sort((a, b) => b.updatedAt - a.updatedAt).forEach(d => {
+        listEl.appendChild(createDocListItem(d, d.id === currentDoc.id));
+      });
+
+      document.getElementById('doc-counter').textContent = `${listEl.children.length} items`;
+    }
+
+    function createDocListItem(doc, isActive) {
+      const div = document.createElement('div');
+      div.className = `doc-item ${isActive ? 'active' : ''}`;
+      div.innerHTML = `
+        <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:150px;">${doc.title || 'Untitled'}</span>
+        <span class="badge badge-${doc.storageMode}">${doc.storageMode[0]}</span>
+      `;
+      div.onclick = () => loadDocument(doc);
+      return div;
+    }
+
+    function loadDocument(doc) {
+      currentDoc = { ...doc };
+      docTitleEl.value = currentDoc.title;
+      editorEl.value = currentDoc.content;
+      updateStorageBadge();
+      updateReader();
+      refreshDocList();
+    }
+
+    function createNewDocument(storageMode = 'permanent') {
+      currentDoc = {
+        id: 'doc_' + Date.now(),
+        title: 'Untitled Note',
+        content: '# Untitled Note\n\nStart writing or paste text...',
+        storageMode: storageMode,
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+        expiresAt: storageMode === 'temporary' ? Date.now() + 86400000 : null
+      };
+      loadDocument(currentDoc);
+    }
+
+    /* ---------------------------------------------------------
+       ONE-CLICK PASTE & CLEAR FUNCTIONALITY
+       --------------------------------------------------------- */
+    async function handlePasteAndClear() {
+      try {
+        const clipText = await navigator.clipboard.readText();
+        if (!clipText || clipText.trim() === '') {
+          showToast('Clipboard is empty!');
+          return;
+        }
+
+        currentDoc.content = clipText;
+
+        const headingMatch = clipText.match(/^#\s+(.+)$/m);
+        if (headingMatch) {
+          currentDoc.title = headingMatch[1].trim();
+        } else {
+          currentDoc.title = `Pasted Note (${new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})})`;
+        }
+
+        docTitleEl.value = currentDoc.title;
+        editorEl.value = currentDoc.content;
+
+        updateReader();
+        await saveCurrentDocument();
+        showToast('📋 Clipboard content pasted & rendered!');
+      } catch (err) {
+        const manualText = prompt('Paste your Markdown or HTML text below:');
+        if (manualText !== null) {
+          currentDoc.content = manualText;
+          editorEl.value = manualText;
+          updateReader();
+          await saveCurrentDocument();
+          showToast('Text pasted & rendered!');
+        }
+      }
+    }
+
+    document.getElementById('btn-paste-clear').addEventListener('click', handlePasteAndClear);
+    document.getElementById('ribbon-btn-paste').addEventListener('click', handlePasteAndClear);
+
+    /* ---------------------------------------------------------
+       FULLSCREEN IMMERSIVE / ZEN MODE LOGIC
+       --------------------------------------------------------- */
+    function toggleZenMode() {
+      const isZen = document.body.classList.toggle('zen-mode');
+      if (isZen) {
+        if (document.documentElement.requestFullscreen) {
+          document.documentElement.requestFullscreen().catch(() => {});
+        }
+        showToast('⛶ Zen Mode activated (Esc to exit)');
+      } else {
+        if (document.fullscreenElement && document.exitFullscreen) {
+          document.exitFullscreen().catch(() => {});
+        }
+      }
+    }
+
+    document.getElementById('btn-toggle-zen').addEventListener('click', toggleZenMode);
+    document.getElementById('btn-toggle-zen-ribbon').addEventListener('click', toggleZenMode);
+    document.getElementById('btn-exit-zen').addEventListener('click', toggleZenMode);
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && document.body.classList.contains('zen-mode')) {
+        toggleZenMode();
+      }
+    });
+
+    document.addEventListener('fullscreenchange', () => {
+      if (!document.fullscreenElement && document.body.classList.contains('zen-mode')) {
+        document.body.classList.remove('zen-mode');
+      }
+    });
+
+    /* ---------------------------------------------------------
+       PWA INSTALLATION SETUP (FOR CHROME ANDROID & DESKTOP)
+       --------------------------------------------------------- */
+    let deferredInstallPrompt = null;
+    const btnPwaInstall = document.getElementById('btn-pwa-install');
+
+    // Generate Crisp 192x192 and 512x512 PNG Icons dynamically via Canvas
+    function generatePWAIcon(size) {
+      const canvas = document.createElement('canvas');
+      canvas.width = size;
+      canvas.height = size;
+      const ctx = canvas.getContext('2d');
+
+      // Vivid Cyan & Purple Gradient
+      const grad = ctx.createLinearGradient(0, 0, size, size);
+      grad.addColorStop(0, '#00f0ff');
+      grad.addColorStop(1, '#d946ef');
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.roundRect(0, 0, size, size, size * 0.22);
+      ctx.fill();
+
+      // Obsidian Gem Emoji Glyph
+      ctx.fillStyle = '#ffffff';
+      ctx.font = `bold ${Math.round(size * 0.52)}px sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('💎', size / 2, size / 2 + size * 0.03);
+
+      return canvas.toDataURL('image/png');
+    }
+
+    function setupPWAManifest() {
+      const icon192 = generatePWAIcon(192);
+      const icon512 = generatePWAIcon(512);
+
+      const manifestObj = {
+        name: "Obsidian Web Reader",
+        short_name: "ObsidianReader",
+        description: "Obsidian-style Markdown & LaTeX reader with flush privacy modes",
+        start_url: "./",
+        scope: "./",
+        display: "standalone",
+        orientation: "any",
+        background_color: "#06080d",
+        theme_color: "#00f0ff",
+        icons: [
+          { src: icon192, sizes: "192x192", type: "image/png", purpose: "any maskable" },
+          { src: icon512, sizes: "512x512", type: "image/png", purpose: "any maskable" }
+        ]
+      };
+
+      const manifestBlob = new Blob([JSON.stringify(manifestObj)], { type: 'application/manifest+json' });
+      const manifestUrl = URL.createObjectURL(manifestBlob);
+
+      const manifestLink = document.createElement('link');
+      manifestLink.rel = 'manifest';
+      manifestLink.href = manifestUrl;
+      document.head.appendChild(manifestLink);
+    }
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredInstallPrompt = e;
+      btnPwaInstall.style.display = 'flex';
+      showToast('📲 PWA Ready to Install! Tap the green install icon.');
+    });
+
+    btnPwaInstall.addEventListener('click', async () => {
+      if (deferredInstallPrompt) {
+        deferredInstallPrompt.prompt();
+        const choice = await deferredInstallPrompt.userChoice;
+        if (choice.outcome === 'accepted') {
+          showToast('🎉 Obsidian Web Reader Installed!');
+          btnPwaInstall.style.display = 'none';
+        }
+        deferredInstallPrompt = null;
+      } else {
+        alert("To install on Chrome Android:\n1. Ensure you are running on HTTPS (or localhost)\n2. Tap Chrome's three dots (⋮) menu\n3. Tap 'Install app' or 'Add to Home screen'");
+      }
+    });
+
+    /* ---------------------------------------------------------
+       EVENT LISTENERS & CONTROLS
+       --------------------------------------------------------- */
+    readerContainer.addEventListener('scroll', () => {
+      const total = readerContainer.scrollHeight - readerContainer.clientHeight;
+      const progress = total > 0 ? (readerContainer.scrollTop / total) * 100 : 0;
+      progressBar.style.width = progress + '%';
+    });
+
+    editorEl.addEventListener('input', () => {
+      currentDoc.content = editorEl.value;
+      updateReader();
+      saveCurrentDocument();
+    });
+
+    docTitleEl.addEventListener('input', () => {
+      currentDoc.title = docTitleEl.value;
+      saveCurrentDocument();
+    });
+
+    storageModeSelector.addEventListener('change', async (e) => {
+      const oldMode = currentDoc.storageMode;
+      const newMode = e.target.value;
+      currentDoc.storageMode = newMode;
+
+      if (oldMode !== 'flush' && newMode === 'flush') {
+        await dbDeleteDoc(currentDoc.id);
+      }
+      updateStorageBadge();
+      saveCurrentDocument();
+      showToast(`Storage mode: ${newMode.toUpperCase()}`);
+    });
+
+    btnFlushNow.addEventListener('click', () => {
+      if (confirm('🔥 Burn after reading: This note will be permanently purged!')) {
+        createNewDocument('permanent');
+        showToast('🔥 Document flushed and destroyed!');
+      }
+    });
+
+    viewModeSelector.addEventListener('change', (e) => {
+      const mode = e.target.value;
+      if (mode === 'reader') {
+        editorEl.style.display = 'none';
+        readerContainer.style.display = 'flex';
+      } else if (mode === 'editor') {
+        editorEl.style.display = 'block';
+        readerContainer.style.display = 'none';
+      } else if (mode === 'split') {
+        editorEl.style.display = 'block';
+        readerContainer.style.display = 'flex';
+      }
+    });
+
+    document.getElementById('btn-import').addEventListener('click', () => {
+      document.getElementById('file-importer').click();
+    });
+
+    document.getElementById('file-importer').addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+        createNewDocument(storageModeSelector.value);
+        currentDoc.title = file.name.replace(/\.(md|html|txt)$/i, '');
+        currentDoc.content = evt.target.result;
+        docTitleEl.value = currentDoc.title;
+        editorEl.value = currentDoc.content;
+        updateReader();
+        saveCurrentDocument();
+        showToast(`Imported: ${file.name}`);
+      };
+      reader.readAsText(file);
+    });
+
+    document.getElementById('btn-toggle-sidebar').addEventListener('click', () => {
+      document.getElementById('sidebar').classList.toggle('collapsed');
+    });
+
+    document.getElementById('btn-toggle-toc').addEventListener('click', () => {
+      outlinePane.style.display = outlinePane.style.display === 'block' ? 'none' : 'block';
+    });
+
+    document.getElementById('btn-new-doc').addEventListener('click', () => {
+      createNewDocument('permanent');
+      showToast('New note created');
+    });
+
+    document.getElementById('btn-theme-modal').addEventListener('click', () => openModal('theme-modal'));
+    document.getElementById('btn-settings').addEventListener('click', () => openModal('settings-modal'));
+
+    function openModal(id) { document.getElementById(id).style.display = 'flex'; }
+    function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+
+    document.getElementById('theme-picker').addEventListener('change', (e) => {
+      document.body.setAttribute('data-theme', e.target.value);
+      localStorage.setItem('bt_theme', e.target.value);
+      showToast(`Theme: ${e.target.options[e.target.selectedIndex].text}`);
+    });
+
+    document.getElementById('font-picker').addEventListener('change', (e) => {
+      document.documentElement.style.setProperty('--reader-font', e.target.value);
+    });
+    document.getElementById('font-size-slider').addEventListener('input', (e) => {
+      document.documentElement.style.setProperty('--font-size-base', e.target.value + 'px');
+      document.getElementById('font-size-label').textContent = e.target.value + 'px';
+    });
+    document.getElementById('width-slider').addEventListener('input', (e) => {
+      document.documentElement.style.setProperty('--max-reader-width', e.target.value + 'px');
+      document.getElementById('width-label').textContent = e.target.value + 'px';
+    });
+
+    window.addEventListener('beforeunload', () => {
+      if (currentDoc.storageMode === 'flush') {
+        currentDoc.content = '';
+        currentDoc.title = '';
+      }
+    });
+
+    /* ---------------------------------------------------------
+       INITIALIZE APP & PWA
+       --------------------------------------------------------- */
+    async function initApp() {
+      setupPWAManifest();
+
+      const savedTheme = localStorage.getItem('bt_theme') || 'bt-hyper-vivid';
+      document.body.setAttribute('data-theme', savedTheme);
+      document.getElementById('theme-picker').value = savedTheme;
+
+      await initDB();
+      const existingDocs = await dbGetAllDocs();
+      if (existingDocs.length > 0) {
+        loadDocument(existingDocs[0]);
+      } else {
+        await dbSaveDoc(currentDoc);
+        loadDocument(currentDoc);
+      }
+      await refreshDocList();
+
+      if ('serviceWorker' in navigator) {
+        const swBlob = new Blob([`
+          self.addEventListener('install', e => self.skipWaiting());
+          self.addEventListener('activate', e => clients.claim());
+          self.addEventListener('fetch', e => e.respondWith(fetch(e.request).catch(() => caches.match(e.request))));
+        `], { type: 'application/javascript' });
+        navigator.serviceWorker.register(URL.createObjectURL(swBlob)).catch(() => {});
+      }
+    }
+
+    initApp();
+  </script>
+</body>
+</html>
